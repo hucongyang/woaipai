@@ -199,11 +199,11 @@ abstract class Application extends Module
 
         $this->state = self::STATE_BEGIN;
 
-        $this->preInit($config);
+        $this->preInit($config);                 // 预处理配置项
 
         $this->registerErrorHandler($config);
 
-        Component::__construct($config);
+        Component::__construct($config);        // 使用yii\base\Component::__construct()完成构建
     }
 
     /**
@@ -216,25 +216,25 @@ abstract class Application extends Module
      */
     public function preInit(&$config)
     {
-        if (!isset($config['id'])) {
+        if (!isset($config['id'])) {        // 配置数组中必须指定应用id，这里仅判断，不赋值
             throw new InvalidConfigException('The "id" configuration for the Application is required.');
         }
-        if (isset($config['basePath'])) {
-            $this->setBasePath($config['basePath']);
+        if (isset($config['basePath'])) {               // basePath必须在配置文件中给出，否则会抛出异常
+            $this->setBasePath($config['basePath']);    // 这里会设置 @app，完成设置后，删除配置数组中得basePath配置项
             unset($config['basePath']);
         } else {
             throw new InvalidConfigException('The "basePath" configuration for the Application is required.');
         }
 
-        if (isset($config['vendorPath'])) {
-            $this->setVendorPath($config['vendorPath']);
+        if (isset($config['vendorPath'])) {                 // @vendor 如果配置文件中设置了vendorPath 即使用配置的值，否则使用默认的
+            $this->setVendorPath($config['vendorPath']);    // 并在设置后，删除$config中得相应配置项
             unset($config['vendorPath']);
         } else {
             // set "@vendor"
             $this->getVendorPath();
         }
-        if (isset($config['runtimePath'])) {
-            $this->setRuntimePath($config['runtimePath']);
+        if (isset($config['runtimePath'])) {                // @runtime 如果配置文件中设置了runtimePath 即使用配置的值，否则使用默认的
+            $this->setRuntimePath($config['runtimePath']);  // 并在设置后，删除$config中得相应配置项
             unset($config['runtimePath']);
         } else {
             // set "@runtime"
@@ -247,11 +247,11 @@ abstract class Application extends Module
         } elseif (!ini_get('date.timezone')) {
             $this->setTimeZone('UTC');
         }
-
-        // merge core components with custom components
+                                                                    // 将coreComponents()所定义的核心组织配置，与开发者通过配置文件定义的组件配置进行合并
+        // merge core components with custom components             // 合并中，开发者配置优先，核心组件配置起补充作用
         foreach ($this->coreComponents() as $id => $component) {
-            if (!isset($config['components'][$id])) {
-                $config['components'][$id] = $component;
+            if (!isset($config['components'][$id])) {               // 配置文件中没有的，使用核心组件的配置
+                $config['components'][$id] = $component;            // 配置文件中有的，但并未指组件的class的，使用核心组件的class
             } elseif (is_array($config['components'][$id]) && !isset($config['components'][$id]['class'])) {
                 $config['components'][$id]['class'] = $component['class'];
             }
@@ -369,13 +369,13 @@ abstract class Application extends Module
         try {
 
             $this->state = self::STATE_BEFORE_REQUEST;
-            $this->trigger(self::EVENT_BEFORE_REQUEST);
+            $this->trigger(self::EVENT_BEFORE_REQUEST);             // 先触发EVENT_BEFORE_REQUEST
 
             $this->state = self::STATE_HANDLING_REQUEST;
-            $response = $this->handleRequest($this->getRequest());
+            $response = $this->handleRequest($this->getRequest());  // 处理Request
 
             $this->state = self::STATE_AFTER_REQUEST;
-            $this->trigger(self::EVENT_AFTER_REQUEST);
+            $this->trigger(self::EVENT_AFTER_REQUEST);              // 处理完毕后触发EVENT_AFTER_REQUEST
 
             $this->state = self::STATE_SENDING_RESPONSE;
             $response->send();
@@ -436,7 +436,7 @@ abstract class Application extends Module
      * @return string the directory that stores vendor files.
      * Defaults to "vendor" directory under [[basePath]].
      */
-    public function getVendorPath()
+    public function getVendorPath()                 // 在未设置vendorPath时，使用默认值
     {
         if ($this->_vendorPath === null) {
             $this->setVendorPath($this->getBasePath() . DIRECTORY_SEPARATOR . 'vendor');
@@ -449,7 +449,7 @@ abstract class Application extends Module
      * Sets the directory that stores vendor files.
      * @param string $path the directory that stores vendor files.
      */
-    public function setVendorPath($path)
+    public function setVendorPath($path)           // 这里定义了3个别名
     {
         $this->_vendorPath = Yii::getAlias($path);
         Yii::setAlias('@vendor', $this->_vendorPath);
@@ -616,14 +616,14 @@ abstract class Application extends Module
     public function coreComponents()
     {
         return [
-            'log' => ['class' => 'yii\log\Dispatcher'],
-            'view' => ['class' => 'yii\web\View'],
-            'formatter' => ['class' => 'yii\i18n\Formatter'],
-            'i18n' => ['class' => 'yii\i18n\I18N'],
-            'mailer' => ['class' => 'yii\swiftmailer\Mailer'],
-            'urlManager' => ['class' => 'yii\web\UrlManager'],
-            'assetManager' => ['class' => 'yii\web\AssetManager'],
-            'security' => ['class' => 'yii\base\Security'],
+            'log' => ['class' => 'yii\log\Dispatcher'],              // 日志组件
+            'view' => ['class' => 'yii\web\View'],                   // 视图文件
+            'formatter' => ['class' => 'yii\i18n\Formatter'],        // 格式文件
+            'i18n' => ['class' => 'yii\i18n\I18N'],                  // 国际化组件
+            'mailer' => ['class' => 'yii\swiftmailer\Mailer'],       // 邮件组件
+            'urlManager' => ['class' => 'yii\web\UrlManager'],       // url管理组件
+            'assetManager' => ['class' => 'yii\web\AssetManager'],   // 前端资源管理组件
+            'security' => ['class' => 'yii\base\Security'],          // 安全组件
         ];
     }
 

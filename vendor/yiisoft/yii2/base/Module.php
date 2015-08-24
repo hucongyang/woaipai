@@ -110,7 +110,7 @@ class Module extends ServiceLocator
     /**
      * @var string the root directory of the module.
      */
-    private $_basePath;
+    private $_basePath;         // basePath属性，由Application的父类yii\base\Module定义，并提供getter和setter
     /**
      * @var string the root directory that contains view files for this module
      */

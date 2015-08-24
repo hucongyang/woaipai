@@ -44,7 +44,7 @@ use yii\base\Event;
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
  */
-class AttributeBehavior extends Behavior
+class AttributeBehavior extends Behavior        // 定义了在一个ActiveRecord对象的某些事件发生时，自动对某些字段进行修改的行为
 {
     /**
      * @var array list of attributes that are to be automatically filled with the value specified via [[value]].

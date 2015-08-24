@@ -127,11 +127,11 @@ class Object implements Configurable
      * @throws InvalidCallException if the property is write-only
      * @see __set()
      */
-    public function __get($name)
+    public function __get($name)                // 这里$name是属性名
     {
-        $getter = 'get' . $name;
+        $getter = 'get' . $name;                // getter函数的函数名
         if (method_exists($this, $getter)) {
-            return $this->$getter();
+            return $this->$getter();            // 调用了getter函数
         } elseif (method_exists($this, 'set' . $name)) {
             throw new InvalidCallException('Getting write-only property: ' . get_class($this) . '::' . $name);
         } else {
@@ -150,11 +150,11 @@ class Object implements Configurable
      * @throws InvalidCallException if the property is read-only
      * @see __get()
      */
-    public function __set($name, $value)
+    public function __set($name, $value)        // $name是属性名，$value是拟写入的属性值
     {
-        $setter = 'set' . $name;
+        $setter = 'set' . $name;                // setter函数的函数名
         if (method_exists($this, $setter)) {
-            $this->$setter($value);
+            $this->$setter($value);             // 调用setter函数
         } elseif (method_exists($this, 'get' . $name)) {
             throw new InvalidCallException('Setting read-only property: ' . get_class($this) . '::' . $name);
         } else {
@@ -173,8 +173,8 @@ class Object implements Configurable
      * @return boolean whether the named property is set (not null).
      * @see http://php.net/manual/en/function.isset.php
      */
-    public function __isset($name)
-    {
+    public function __isset($name)    // __isset()用于测试属性值是否不为null，在isset($object->property)时自动调用。
+    {                                 // 注意该属性要有相应的getter
         $getter = 'get' . $name;
         if (method_exists($this, $getter)) {
             return $this->$getter() !== null;
@@ -195,8 +195,8 @@ class Object implements Configurable
      * @throws InvalidCallException if the property is read only.
      * @see http://php.net/manual/en/function.unset.php
      */
-    public function __unset($name)
-    {
+    public function __unset($name)   // 用于将属性值设为null，在unset($object->property)时被自动调用。
+    {                                // 注意该属性要有相应的setter
         $setter = 'set' . $name;
         if (method_exists($this, $setter)) {
             $this->$setter(null);
@@ -221,6 +221,9 @@ class Object implements Configurable
     }
 
     /**
+     * hasProperty() 用于测试是否有某个属性。即，定义了getter或setter.如果hasProperty()的参数
+     * $checkVars = true (默认为true),那么只要具有同名的成员变量也认为具有该属性，如前面提到的public $title
+     *
      * Returns a value indicating whether a property is defined.
      * A property is defined if:
      *
@@ -240,6 +243,10 @@ class Object implements Configurable
     }
 
     /**
+     * canGetProperty() 测试一个属性是否可读，参数 $checkVars 的意义同上。只要定义了getter，属性即可读。
+     * 同时，如果 $checkVars 为 true 。那么只要类定义了成员变量，不管是public， private 还是 protected，
+     * 都认为是可读
+     *
      * Returns a value indicating whether a property can be read.
      * A property is readable if:
      *
@@ -258,6 +265,10 @@ class Object implements Configurable
     }
 
     /**
+     * canSetProperty() 测试一个属性是否可写，参数 $checkVars 的意义同上。只要定义了setter，属性即可写。
+     * 同时，在 $checkVars 为 ture 。那么只要类定义了成员变量，不管是public， private 还是 protected，
+     * 都认为是可写
+     *
      * Returns a value indicating whether a property can be set.
      * A property is writable if:
      *

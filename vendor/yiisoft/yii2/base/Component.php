@@ -95,12 +95,12 @@ use Yii;
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @since 2.0
  */
-class Component extends Object
+class Component extends Object                      // component 类三大特性: 属性(property) 事件(event) 行为(behavior)
 {
     /**
      * @var array the attached event handlers (event name => handlers)
      */
-    private $_events = [];
+    private $_events = [];                          // handler数组,用来保存绑定的handler
     /**
      * @var Behavior[]|null the attached behaviors (behavior name => behavior). This is `null` when not initialized.
      */
@@ -128,12 +128,12 @@ class Component extends Object
         if (method_exists($this, $getter)) {
             // read property, e.g. getName()
             return $this->$getter();
-        } else {
+        } else {                                        // 注意这个else分支的内容，正是与yii\base\Object::__get()的不同之处
             // behavior property
             $this->ensureBehaviors();
             foreach ($this->_behaviors as $behavior) {
                 if ($behavior->canGetProperty($name)) {
-                    return $behavior->$name;
+                    return $behavior->$name;            // 属性在行为中须为public。否则不可能通过下面的形式访问
                 }
             }
         }
@@ -474,7 +474,7 @@ class Component extends Object
      * handler list.
      * @see off()
      */
-    public function on($name, $handler, $data = null, $append = true)
+    public function on($name, $handler, $data = null, $append = true)               // 绑定过程就是将handler写入_event[]；$data 提供绑定时的相关数据
     {
         $this->ensureBehaviors();
         if ($append || empty($this->_events[$name])) {
@@ -493,18 +493,18 @@ class Component extends Object
      * @return boolean if a handler is found and detached
      * @see on()
      */
-    public function off($name, $handler = null)
+    public function off($name, $handler = null)     // 事件解除时，就是使用unset()函数，处理$_event[]数组的相应元素
     {
         $this->ensureBehaviors();
         if (empty($this->_events[$name])) {
             return false;
         }
-        if ($handler === null) {
+        if ($handler === null) {                  // $handler === null 时解除所有的handler
             unset($this->_events[$name]);
             return true;
         } else {
             $removed = false;
-            foreach ($this->_events[$name] as $i => $event) {
+            foreach ($this->_events[$name] as $i => $event) {       // 遍历所有的 $handler
                 if ($event[0] === $handler) {
                     unset($this->_events[$name][$i]);
                     $removed = true;
@@ -524,7 +524,7 @@ class Component extends Object
      * @param string $name the event name
      * @param Event $event the event parameter. If not set, a default [[Event]] object will be created.
      */
-    public function trigger($name, Event $event = null)
+    public function trigger($name, Event $event = null)             // 提供事件触发时的数据
     {
         $this->ensureBehaviors();
         if (!empty($this->_events[$name])) {
@@ -536,17 +536,17 @@ class Component extends Object
             }
             $event->handled = false;
             $event->name = $name;
-            foreach ($this->_events[$name] as $handler) {
+            foreach ($this->_events[$name] as $handler) {            // 遍历handler数组，并依次调用
                 $event->data = $handler[1];
-                call_user_func($handler[0], $event);
-                // stop further handling if the event is handled
-                if ($event->handled) {
+                call_user_func($handler[0], $event);                 // 使用 PHP 的call_user_func调用handler
+                // stop further handling if the event is handled     // 如果在某一handler中，将$event->handled 设为true，
+                if ($event->handled) {                               // 就不再调用后续的handler
                     return;
                 }
             }
         }
         // invoke class-level attached handlers
-        Event::trigger($this, $name, $event);
+        Event::trigger($this, $name, $event);                       // 触发类一级的事件
     }
 
     /**
@@ -641,9 +641,9 @@ class Component extends Object
      */
     public function ensureBehaviors()
     {
-        if ($this->_behaviors === null) {
-            $this->_behaviors = [];
-            foreach ($this->behaviors() as $name => $behavior) {
+        if ($this->_behaviors === null) {                           // 为null表示尚未绑定
+            $this->_behaviors = [];                                 // 为空数组表示没有绑定任何行为
+            foreach ($this->behaviors() as $name => $behavior) {    // 遍历$this->behaviors() 返回的数组，并绑定
                 $this->attachBehaviorInternal($name, $behavior);
             }
         }
@@ -656,17 +656,22 @@ class Component extends Object
      * will be detached first.
      * @param string|array|Behavior $behavior the behavior to be attached
      * @return Behavior the attached behavior.
+     *
+     * 如果 $behavior 参数并非是一个Behavior实例，就以之为参数，用Yii::createObject()创建出来
+     * 如果以匿名行为的形式绑定行为，那么直接将行为附加到这个类上
+     * 如果是命名行为，先看看是否有同名的行为已经绑定在这个类上，如果有，用后来的行为取代之前的行为
+     *
      */
     private function attachBehaviorInternal($name, $behavior)
     {
-        if (!($behavior instanceof Behavior)) {
-            $behavior = Yii::createObject($behavior);
+        if (!($behavior instanceof Behavior)) {         // $behavior 不是Behavior实例，只是类名，配置数组
+            $behavior = Yii::createObject($behavior);   // 就创建$behavior对象
         }
-        if (is_int($name)) {
+        if (is_int($name)) {                            // 匿名行为
             $behavior->attach($this);
             $this->_behaviors[] = $behavior;
-        } else {
-            if (isset($this->_behaviors[$name])) {
+        } else {                                        // 命名行为
+            if (isset($this->_behaviors[$name])) {      // 已经有一个同名的行为，要先解除，再将新的行为绑定上去
                 $this->_behaviors[$name]->detach();
             }
             $behavior->attach($this);

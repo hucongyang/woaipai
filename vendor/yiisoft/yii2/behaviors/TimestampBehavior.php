@@ -64,7 +64,7 @@ use yii\db\Expression;
  * @author Alexander Kochetov <creocoder@gmail.com>
  * @since 2.0
  */
-class TimestampBehavior extends AttributeBehavior
+class TimestampBehavior extends AttributeBehavior       // 将指定的字段设置为一个当前的时间戳，常用于表示最后修改日期，上次登录时间等场景
 {
     /**
      * @var string the attribute that will receive timestamp value

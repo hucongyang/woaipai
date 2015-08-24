@@ -28,27 +28,27 @@ class Event extends Object
      * @var string the event name. This property is set by [[Component::trigger()]] and [[trigger()]].
      * Event handlers may use this property to check what event it is handling.
      */
-    public $name;
+    public $name;                   // 事件名
     /**
      * @var object the sender of this event. If not set, this property will be
      * set as the object whose "trigger()" method is called.
      * This property may also be a `null` when this event is a
      * class-level event which is triggered in a static context.
      */
-    public $sender;
+    public $sender;                 // 事件发布者，通常是调用了 trigger() 的对象或类
     /**
      * @var boolean whether the event is handled. Defaults to false.
      * When a handler sets this to be true, the event processing will stop and
      * ignore the rest of the uninvoked event handlers.
      */
-    public $handled = false;
+    public $handled = false;        // 是否终止事件的后续处理
     /**
      * @var mixed the data that is passed to [[Component::on()]] when attaching an event handler.
      * Note that this varies according to which event handler is currently executing.
      */
-    public $data;
+    public $data;                   // 事件相关数据
 
-    private static $_events = [];
+    private static $_events = [];       // handler数组，用来保存绑定的handler
 
 
     /**
@@ -66,24 +66,7 @@ class Event extends Object
      * });
      * ~~~
      *
-     * The handler will be invoked for EVERY successful ActiveRecord insertion.
-     *
-     * For more details about how to declare an event handler, please refer to [[Component::on()]].
-     *
-     * @param string $class the fully qualified class name to which the event handler needs to attach.
-     * @param string $name the event name.
-     * @param callable $handler the event handler.
-     * @param mixed $data the data to be passed to the event handler when the event is triggered.
-     * When the event handler is invoked, this data can be accessed via [[Event::data]].
-     * @param boolean $append whether to append new event handler to the end of the existing
-     * handler list. If false, the new handler will be inserted at the beginning of the existing
-     * handler list.
-     * @see off()
-     */
-    public static function on($class, $name, $handler, $data = null, $append = true)
-    {
-        $class = ltrim($class, '\\');
-        if ($append || empty(self::$_events[$name][$class])) {
+     * The handler will be invoked for EVERY successful ActiveRecord insertion.handler数组，用来保存绑定的handler
             self::$_events[$name][$class][] = [$handler, $data];
         } else {
             array_unshift(self::$_events[$name][$class], [$handler, $data]);
@@ -102,7 +85,7 @@ class Event extends Object
      * @return boolean whether a handler is found and detached.
      * @see on()
      */
-    public static function off($class, $name, $handler = null)
+    public static function off($class, $name, $handler = null)                           // 用于取消事件 handler
     {
         $class = ltrim($class, '\\');
         if (empty(self::$_events[$name][$class])) {
@@ -135,7 +118,7 @@ class Event extends Object
      * @param string $name the event name.
      * @return boolean whether there is any handler attached to the event.
      */
-    public static function hasHandlers($class, $name)
+    public static function hasHandlers($class, $name)                               // 用于判断是否有相应的 handler 与事件对应
     {
         if (empty(self::$_events[$name])) {
             return false;
@@ -162,7 +145,7 @@ class Event extends Object
      * @param string $name the event name.
      * @param Event $event the event parameter. If not set, a default [[Event]] object will be created.
      */
-    public static function trigger($class, $name, $event = null)
+    public static function trigger($class, $name, $event = null)                        // 用于触发事件
     {
         if (empty(self::$_events[$name])) {
             return;
